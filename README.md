@@ -1,404 +1,249 @@
-\# Aplicación Web de Validación Pico y Placa
+# Aplicación Web de Validación Pico y Placa
 
+## Descripción
 
-
-\## Descripción
-
-
-
-Esta aplicación permite validar si un vehículo puede circular en una fecha y hora determinadas, de acuerdo con las reglas de restricción de circulación conocidas como "Pico y Placa".
-
-
+Esta aplicación permite validar si un vehículo puede circular en una fecha y hora determinadas, de acuerdo con las reglas de restricción de circulación conocidas como **Pico y Placa**.
 
 La solución está compuesta por dos capas claramente separadas:
 
-
-
-\- Frontend desarrollado en Angular.
-
-\- Backend desarrollado en Java utilizando Spring Boot.
-
-
+- **Frontend** desarrollado en Angular.
+- **Backend** desarrollado en Java utilizando Spring Boot.
 
 La comunicación entre ambas capas se realiza mediante servicios REST sobre HTTP. Toda la lógica de validación se encuentra implementada exclusivamente en la capa de backend.
 
-
-
 ---
 
-
-
-\## Arquitectura de la Solución
-
-
+## Arquitectura de la Solución
 
 La aplicación está estructurada en dos proyectos independientes:
 
+- `picoplaca-backend`: API REST en Spring Boot que contiene la lógica de negocio.
+- `picoplaca-frontend`: Aplicación web en Angular que consume el servicio REST.
 
+**Flujo de funcionamiento:**
 
-\- picoplaca-backend: API REST en Spring Boot que contiene la lógica de negocio.
-
-\- picoplaca-frontend: Aplicación web en Angular que consume el servicio REST.
-
-
-
-Flujo de funcionamiento:
-
-
-
-1\. El usuario ingresa la placa y la fecha con hora en el formulario web.
-
-2\. El frontend envía la información al backend mediante una petición HTTP POST.
-
-3\. El backend valida:
-
-&nbsp;  - Que la fecha no sea anterior a la fecha y hora actual.
-
-&nbsp;  - El día de la semana.
-
-&nbsp;  - El horario restringido.
-
-&nbsp;  - El último dígito de la placa.
-
-4\. El backend responde con un resultado indicando si el vehículo puede o no circular.
-
-5\. El frontend muestra el resultado al usuario.
-
-
+1. El usuario ingresa la placa y la fecha con hora en el formulario web.
+2. El frontend envía la información al backend mediante una petición HTTP POST.
+3. El backend valida:
+   - Que la fecha no sea anterior a la fecha y hora actual.
+   - El formato de la placa mediante expresión regular.
+   - El día de la semana y el horario restringido.
+   - El último dígito de la placa.
+4. El backend responde con un resultado indicando si el vehículo puede o no circular, junto con la placa, la fecha evaluada y un mensaje explicativo.
+5. El frontend muestra el resultado al usuario con retroalimentación visual (verde / rojo).
 
 ---
 
+## Reglas de Validación Implementadas
 
+**Restricción por día (según último dígito de placa):**
 
-\## Reglas de Validación Implementadas
+| Último dígito | Día restringido |
+|---|---|
+| 1 y 2 | Lunes |
+| 3 y 4 | Martes |
+| 5 y 6 | Miércoles |
+| 7 y 8 | Jueves |
+| 9 y 0 | Viernes |
+| — | Sábado y Domingo: Sin restricción |
 
+**Horarios restringidos:**
 
+- 07:00 a 09:30
+- 16:00 a 19:30
 
-Restricción por día (según último dígito de placa):
+**Validaciones adicionales:**
 
-
-
-\- Lunes: 1 y 2
-
-\- Martes: 3 y 4
-
-\- Miércoles: 5 y 6
-
-\- Jueves: 7 y 8
-
-\- Viernes: 9 y 0
-
-\- Sábado y Domingo: Sin restricción
-
-
-
-Horarios restringidos:
-
-
-
-\- 07:00 a 09:30
-
-\- 16:00 a 19:30
-
-
-
-Validaciones adicionales:
-
-
-
-\- No se permite consultar fechas y horas anteriores al momento actual.
-
-\- La lógica de validación se encuentra únicamente en el backend.
-
-
+- No se permite consultar fechas y horas anteriores al momento actual.
+- El formato de placa debe ser: 3 letras seguidas de 3 o 4 dígitos (Ej: `ABC-123`, `ABC1234`).
+- Toda la lógica de validación se encuentra únicamente en el backend.
 
 ---
 
-
-
-\## Requisitos Previos
-
-
+## Requisitos Previos
 
 Para ejecutar el proyecto localmente se requiere:
 
+- Java 21
+- Maven 3.9 o superior
+- Node.js 18 o superior
+- Angular CLI instalado globalmente
 
+**Verificación de versiones:**
 
-\- Java 17 o superior
-
-\- Maven 3.9 o superior
-
-\- Node.js 18 o superior
-
-\- Angular CLI instalado globalmente
-
-
-
-Verificación de versiones:
-
-
-
-```
-
+```bash
 java -version
-
 mvn -v
-
 node -v
-
 npm -v
-
 ng version
-
 ```
-
-
 
 ---
 
-
-
-\## Ejecución del Backend (Spring Boot)
-
-
-
-1\. Ubicarse en la carpeta del backend:
-
-
+## Estructura del Proyecto
 
 ```
+picoplaca-backend/
+├── src/
+│   ├── main/java/com/pico/picoplaca/
+│   │   ├── controller/
+│   │   │   └── PicoPlacaController.java
+│   │   ├── service/
+│   │   │   └── PicoPlacaService.java
+│   │   ├── model/
+│   │   │   ├── ValidationRequest.java
+│   │   │   └── ValidationResponse.java
+│   │   ├── exception/
+│   │   │   ├── GlobalExceptionHandler.java
+│   │   │   ├── InvalidPlateException.java
+│   │   │   └── InvalidDateException.java
+│   │   └── PicoplacaApplication.java
+│   └── test/
+│       └── PicoPlacaServiceTest.java
+└── pom.xml
 
+picoplaca-frontend/
+└── src/app/
+    ├── components/
+    │   └── pico-placa/
+    │       ├── pico-placa.component.ts
+    │       ├── pico-placa.component.html
+    │       └── pico-placa.component.css
+    ├── services/
+    │   ├── pico-placa.service.ts
+    │   └── pico-placa.service.spec.ts
+    ├── models/
+    │   ├── validation-request.model.ts
+    │   └── validation-response.model.ts
+    ├── app.component.ts
+    ├── app.component.html
+    └── app.config.ts
+```
+
+---
+
+## Ejecución del Backend (Spring Boot)
+
+1. Ubicarse en la carpeta del backend:
+
+```bash
 cd picoplaca-backend
-
 ```
 
+2. Compilar y ejecutar:
 
-
-2\. Compilar y ejecutar:
-
-
-
-```
-
+```bash
 mvn spring-boot:run
-
 ```
 
+El servicio quedará disponible en `http://localhost:8080`
 
-
-El servicio quedará disponible en:
-
-
+**Endpoint principal:**
 
 ```
-
-http://localhost:8080
-
-```
-
-
-
-Endpoint principal:
-
-
-
-```
-
 POST http://localhost:8080/api/validate
-
+Content-Type: application/json
 ```
 
-
-
-Ejemplo de cuerpo de solicitud JSON:
-
-
+**Ejemplo de solicitud:**
 
 ```json
-
 {
-
-&nbsp; "plate": "ABC1231",
-
-&nbsp; "dateTime": "2026-03-09T08:00"
-
+  "plate": "ABC-123",
+  "dateTime": "2026-03-09T08:00"
 }
-
 ```
 
+**Ejemplo de respuesta exitosa:**
 
+```json
+{
+  "plate": "ABC-123",
+  "dateTime": "2026-03-09T08:00",
+  "canCirculate": false,
+  "message": "El vehículo NO puede circular en la fecha y hora indicadas (restricción Pico y Placa)."
+}
+```
+
+**Ejemplo de respuesta de error (placa inválida):**
+
+```json
+{
+  "timestamp": "2026-03-09T08:00:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Formato de placa inválido. Debe tener 3 letras seguidas de 3 o 4 dígitos (ej: ABC-123)"
+}
+```
 
 ---
 
+## Ejecución del Frontend (Angular)
 
+1. Ubicarse en la carpeta del frontend:
 
-\## Ejecución del Frontend (Angular)
-
-
-
-1\. Ubicarse en la carpeta del frontend:
-
-
-
-```
-
+```bash
 cd picoplaca-frontend
-
 ```
 
+2. Instalar dependencias:
 
-
-2\. Instalar dependencias:
-
-
-
-```
-
+```bash
 npm install
-
 ```
 
+3. Ejecutar la aplicación:
 
-
-3\. Ejecutar la aplicación:
-
-
-
-```
-
+```bash
 ng serve
-
 ```
 
-
-
-La aplicación quedará disponible en:
-
-
-
-```
-
-http://localhost:4200
-
-```
-
-
-
-El frontend se comunica con el backend en:
-
-
-
-```
-
-http://localhost:8080/api/validate
-
-```
-
-
+La aplicación quedará disponible en `http://localhost:4200`
 
 ---
 
+## Pruebas
 
+**Backend — pruebas unitarias:**
 
-\## Consideraciones para Ambiente de Producción
+```bash
+cd picoplaca-backend
+mvn test
+```
 
+Cubre los siguientes escenarios:
+- Fecha nula o pasada → lanza `InvalidDateException`
+- Placa nula o con formato inválido → lanza `InvalidPlateException`
+- Vehículo restringido por día y horario → `canCirculate: false`
+- Vehículo fuera de horario de restricción → `canCirculate: true`
+- Fin de semana sin restricción → `canCirculate: true`
 
+**Frontend — pruebas del servicio:**
 
-La aplicación ha sido desarrollada considerando buenas prácticas de separación de responsabilidades:
+```bash
+cd picoplaca-frontend
+ng test
+```
 
-
-
-\- Arquitectura en capas.
-
-\- Lógica de negocio centralizada en el backend.
-
-\- Comunicación REST desacoplada.
-
-\- Validaciones críticas realizadas en el servidor.
-
-
-
-Para un entorno productivo real se recomienda:
-
-
-
-\- Implementar manejo global de excepciones con códigos HTTP adecuados.
-
-\- Agregar validaciones adicionales de formato de placa.
-
-\- Incorporar pruebas unitarias.
-
-\- Configurar variables de entorno para URLs y puertos.
-
-\- Implementar contenedorización con Docker.
-
-\- Configurar CORS de manera restrictiva según dominio autorizado.
-
-
+Cubre los siguientes escenarios:
+- El servicio se crea correctamente
+- POST al endpoint correcto con los datos del request
+- Respuesta con `canCirculate: false` para vehículo restringido
+- Respuesta con `canCirculate: true` para vehículo libre
 
 ---
 
+## Consideraciones para Ambiente de Producción
 
-
-\## Estructura del Proyecto
-
-
-
-```
-
-picoplaca-backend
-
-&nbsp; ├── controller
-
-&nbsp; ├── service
-
-&nbsp; └── model
-
-
-
-picoplaca-frontend
-
-&nbsp; ├── src
-
-&nbsp; └── app
-
-```
-
-
+- Configurar CORS de manera restrictiva según el dominio autorizado (actualmente `*`).
+- Externalizar la URL del backend en el frontend mediante variables de entorno (`environment.ts`).
+- Implementar contenedorización con Docker para facilitar el despliegue.
+- Configurar HTTPS en ambas capas.
+- Agregar rate limiting en el backend para evitar abuso del endpoint.
 
 ---
 
-
-
-\## Autor
-
-
+## Autor
 
 Jonathan Liquinchana
-
-
-
----
-
-
-
-\## Notas Finales
-
-
-
-La solución cumple con los requerimientos solicitados:
-
-
-
-\- Aplicación web en Angular.
-
-\- Backend en Java con Spring Boot.
-
-\- Comunicación mediante servicios REST.
-
-\- Validación de fecha no anterior a la actual.
-
-\- Lógica de pico y placa implementada en backend.
-
-\- Código estructurado y preparado para extensión futura.
-
