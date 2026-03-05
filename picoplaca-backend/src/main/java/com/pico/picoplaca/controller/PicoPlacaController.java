@@ -5,8 +5,7 @@ import com.pico.picoplaca.model.ValidationResponse;
 import com.pico.picoplaca.service.PicoPlacaService;
 
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
+import org.springframework.http.ResponseEntity;
 
 @RestController
 @RequestMapping("/api")
@@ -20,29 +19,9 @@ public class PicoPlacaController {
     }
 
     @PostMapping("/validate")
-    public ValidationResponse validate(@RequestBody ValidationRequest request) {
+    public ResponseEntity<ValidationResponse> validate(@RequestBody ValidationRequest request) {
 
-        if (request.getDateTime() == null) {
-            throw new RuntimeException("Fecha inválida");
-        }
-
-        if (request.getDateTime().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("La fecha no puede ser pasada");
-        }
-
-        boolean result = service.canCirculate(
-                request.getPlate(),
-                request.getDateTime()
-        );
-
-        String message = result
-                ? "El vehículo puede circular en la fecha indicada."
-                : "El vehículo NO puede circular en la fecha indicada.";
-
-        return new ValidationResponse(
-                request.getPlate(),
-                result,
-                message
-        );
+        ValidationResponse response = service.validate(request);
+        return ResponseEntity.ok(response);
     }
 }
